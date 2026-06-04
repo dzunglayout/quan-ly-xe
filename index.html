@@ -1046,18 +1046,20 @@
 
     const seedData = {
       selectedId: "v1",
+      fuelPriceRevision: "2026-06-04-e10-1500",
       fuelPriceUpdatedAt: "2026-06-04",
-      fuelPriceEffectiveFrom: "2026-05-28 15:00",
-      fuelPriceSource: "Bộ Công Thương Công văn 3826/BCT-TTTN; giá bán lẻ Petrolimex Vùng 1, kiểm tra 04/06/2026",
-      fuelPriceSourceUrl: "https://moit.gov.vn/tin-tuc/thong-tin-ve-viec-dieu-hanh-gia-xang-dau-ngay-28-5-2026.html",
+      fuelPriceEffectiveFrom: "2026-06-04 15:00",
+      fuelPriceSource: "Petrolimex Thông cáo 34/2026/PLX-TCBC; đối chiếu tin thị trường sau 15:00 ngày 04/06/2026",
+      fuelPriceSourceUrl: "https://www.petrolimex.com.vn/ndi/thong-cao-bao-chi/petrolimex-dieu-chinh-gia-xang-dau-tu-15-gio-00-phut-ngay-04-6-2026.html",
       fuelPrices: [
         { type: "Xăng RON 95-V", unitPrice: 25050, source: "Petrolimex Vùng 1" },
         { type: "Xăng RON 95-III", unitPrice: 24150, source: "Petrolimex Vùng 1" },
-        { type: "Xăng E10 RON 95-III", unitPrice: 23660, source: "Petrolimex Vùng 1" },
-        { type: "Xăng E5 RON 92-II", unitPrice: 23250, source: "Petrolimex Vùng 1" },
-        { type: "Dầu DO 0,001S-V", unitPrice: 28910, source: "Petrolimex Vùng 1" },
-        { type: "Dầu DO 0,05S-II", unitPrice: 27650, source: "Petrolimex Vùng 1" },
-        { type: "Dầu hỏa 2-K", unitPrice: 25800, source: "Petrolimex Vùng 1" }
+        { type: "Xăng E10 RON 95-V", unitPrice: 23230, source: "Petrolimex Vùng 1" },
+        { type: "Xăng E10 RON 95-III", unitPrice: 22330, source: "Petrolimex Vùng 1" },
+        { type: "Xăng E5 RON 92-II", unitPrice: 21780, source: "Petrolimex Vùng 1" },
+        { type: "Dầu DO 0,001S-V", unitPrice: 28120, source: "Petrolimex Vùng 1" },
+        { type: "Dầu DO 0,05S-II", unitPrice: 26860, source: "Petrolimex Vùng 1" },
+        { type: "Dầu hỏa 2-K", unitPrice: 24960, source: "Petrolimex Vùng 1" }
       ],
       vehicles: [
         {
@@ -1324,7 +1326,8 @@
       saved.fuel = Array.isArray(saved.fuel) ? saved.fuel : [];
       saved.trips = Array.isArray(saved.trips) ? saved.trips : [];
       saved.documents = Array.isArray(saved.documents) ? saved.documents : [];
-      if (saved.fuelPriceUpdatedAt !== seedData.fuelPriceUpdatedAt) {
+      if (saved.fuelPriceRevision !== seedData.fuelPriceRevision) {
+        saved.fuelPriceRevision = seedData.fuelPriceRevision;
         saved.fuelPriceUpdatedAt = seedData.fuelPriceUpdatedAt;
         saved.fuelPriceEffectiveFrom = seedData.fuelPriceEffectiveFrom;
         saved.fuelPriceSource = seedData.fuelPriceSource;
@@ -2161,6 +2164,7 @@
         if (!Array.isArray(data.vehicles)) throw new Error("Sai định dạng");
         state = migrateState({
           selectedId: data.selectedId || data.vehicles[0]?.id || "",
+          fuelPriceRevision: data.fuelPriceRevision || seedData.fuelPriceRevision,
           fuelPriceUpdatedAt: data.fuelPriceUpdatedAt || seedData.fuelPriceUpdatedAt,
           fuelPriceEffectiveFrom: data.fuelPriceEffectiveFrom || seedData.fuelPriceEffectiveFrom,
           fuelPriceSource: data.fuelPriceSource || seedData.fuelPriceSource,
