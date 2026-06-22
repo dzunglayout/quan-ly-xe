@@ -1,4 +1,3 @@
-// Codex Chatgpt
 <!doctype html>
 <html lang="vi">
 <head>
@@ -20,6 +19,41 @@
       --blue: #2f639b;
       --shadow: 0 18px 44px rgba(48, 61, 52, 0.12);
       --radius: 8px;
+      --app-overlay: rgba(247, 244, 238, 0.88);
+      --topbar-bg: rgba(255, 253, 248, 0.92);
+      --panel-bg: rgba(255, 253, 248, 0.94);
+      --field-bg: #fff;
+      --soft-bg: #fbfaf5;
+      --tabs-bg: #f6f8f5;
+      --hover-bg: #f0f5f2;
+      --focus-ring: rgba(22, 115, 91, 0.13);
+      --shadow-hover: 0 8px 18px rgba(30, 37, 33, 0.1);
+      color-scheme: light;
+    }
+
+    body[data-theme="dark"] {
+      --bg: #101513;
+      --surface: #18201c;
+      --surface-2: #202a25;
+      --text: #edf4ee;
+      --muted: #a8b7ae;
+      --line: #334139;
+      --brand: #43b88f;
+      --brand-dark: #8be0bf;
+      --amber: #f2b95b;
+      --red: #ef7676;
+      --blue: #78a9e6;
+      --shadow: 0 18px 44px rgba(0, 0, 0, 0.32);
+      --app-overlay: rgba(12, 17, 15, 0.9);
+      --topbar-bg: rgba(18, 25, 22, 0.94);
+      --panel-bg: rgba(24, 32, 28, 0.96);
+      --field-bg: #101713;
+      --soft-bg: #121a16;
+      --tabs-bg: #111915;
+      --hover-bg: #223029;
+      --focus-ring: rgba(67, 184, 143, 0.2);
+      --shadow-hover: 0 8px 18px rgba(0, 0, 0, 0.28);
+      color-scheme: dark;
     }
 
     * {
@@ -52,7 +86,7 @@
 
     .app {
       min-height: 100vh;
-      background: rgba(247, 244, 238, 0.88);
+      background: var(--app-overlay);
     }
 
     .topbar {
@@ -65,8 +99,8 @@
       gap: 16px;
       min-height: 68px;
       padding: 12px clamp(16px, 4vw, 42px);
-      border-bottom: 1px solid rgba(30, 37, 33, 0.09);
-      background: rgba(255, 253, 248, 0.92);
+      border-bottom: 1px solid var(--line);
+      background: var(--topbar-bg);
       backdrop-filter: blur(16px);
     }
 
@@ -126,7 +160,7 @@
 
     .btn:hover {
       transform: translateY(-1px);
-      box-shadow: 0 8px 18px rgba(30, 37, 33, 0.1);
+      box-shadow: var(--shadow-hover);
     }
 
     .btn.primary {
@@ -156,8 +190,8 @@
     .sidebar,
     .panel,
     dialog {
-      border: 1px solid rgba(30, 37, 33, 0.09);
-      background: rgba(255, 253, 248, 0.94);
+      border: 1px solid var(--line);
+      background: var(--panel-bg);
       box-shadow: var(--shadow);
     }
 
@@ -179,7 +213,7 @@
       gap: 12px;
       padding: 14px;
       border-bottom: 1px solid var(--line);
-      background: #fbfaf5;
+      background: var(--soft-bg);
     }
 
     .field {
@@ -204,7 +238,7 @@
       border: 1px solid var(--line);
       border-radius: var(--radius);
       color: var(--text);
-      background: #fff;
+      background: var(--field-bg);
       outline: none;
     }
 
@@ -217,7 +251,7 @@
     select:focus,
     textarea:focus {
       border-color: var(--brand);
-      box-shadow: 0 0 0 3px rgba(22, 115, 91, 0.13);
+      box-shadow: 0 0 0 3px var(--focus-ring);
     }
 
     .vehicle-list {
@@ -1047,11 +1081,13 @@
 
     const seedData = {
       selectedId: "v1",
-      fuelPriceRevision: "2026-06-04-e10-1500",
+      fuelPriceRevision: "2026-06-22-electric",
       fuelPriceUpdatedAt: "2026-06-04",
       fuelPriceEffectiveFrom: "2026-06-04 15:00",
       fuelPriceSource: "Petrolimex Thông cáo 34/2026/PLX-TCBC; đối chiếu tin thị trường sau 15:00 ngày 04/06/2026",
       fuelPriceSourceUrl: "https://www.petrolimex.com.vn/ndi/thong-cao-bao-chi/petrolimex-dieu-chinh-gia-xang-dau-tu-15-gio-00-phut-ngay-04-6-2026.html",
+      customFuelPrices: {},
+      customChargingPrices: {},
       fuelPrices: [
         { type: "Xăng RON 95-V", unitPrice: 25050, source: "Petrolimex Vùng 1" },
         { type: "Xăng RON 95-III", unitPrice: 24150, source: "Petrolimex Vùng 1" },
@@ -1061,6 +1097,11 @@
         { type: "Dầu DO 0,001S-V", unitPrice: 28120, source: "Petrolimex Vùng 1" },
         { type: "Dầu DO 0,05S-II", unitPrice: 26860, source: "Petrolimex Vùng 1" },
         { type: "Dầu hỏa 2-K", unitPrice: 24960, source: "Petrolimex Vùng 1" }
+      ],
+      chargingPrices: [
+        { type: "Trạm công cộng (DC/AC)", unitPrice: 4500, source: "Khung giá sạc trong app" },
+        { type: "Sạc tại nhà", unitPrice: 3000, source: "Khung giá sạc trong app" },
+        { type: "Khác / Nhập tay", unitPrice: 0, source: "Người dùng tự nhập" }
       ],
       vehicles: [
         {
@@ -1334,9 +1375,16 @@
         saved.fuelPriceSource = seedData.fuelPriceSource;
         saved.fuelPriceSourceUrl = seedData.fuelPriceSourceUrl;
         saved.fuelPrices = structuredClone(seedData.fuelPrices);
+        saved.chargingPrices = structuredClone(seedData.chargingPrices);
       }
       saved.fuelPriceSourceUrl = saved.fuelPriceSourceUrl || seedData.fuelPriceSourceUrl;
       if (!Array.isArray(saved.fuelPrices)) saved.fuelPrices = structuredClone(seedData.fuelPrices);
+      if (!saved.fuelPrices.some((item) => item.type === "Điện")) {
+        saved.fuelPrices.push({ type: "Điện", unitPrice: 4500, source: "Khung giá sạc trong app" });
+      }
+      if (!Array.isArray(saved.chargingPrices)) saved.chargingPrices = structuredClone(seedData.chargingPrices);
+      saved.customFuelPrices = saved.customFuelPrices && typeof saved.customFuelPrices === "object" ? saved.customFuelPrices : {};
+      saved.customChargingPrices = saved.customChargingPrices && typeof saved.customChargingPrices === "object" ? saved.customChargingPrices : {};
       return saved;
     }
 
@@ -1642,7 +1690,7 @@
       const rows = fuelRecords()
         .filter((fuel) => fuel.vehicleId === vehicle.id)
         .sort((a, b) => b.date.localeCompare(a.date));
-      const totalLiters = rows.reduce((sum, row) => sum + numberValue(row.liters), 0);
+      const totalQuantity = fuelQuantitySummary(rows);
       const totalCost = rows.reduce((sum, row) => sum + fuelTotal(row), 0);
       const latest = rows[0];
 
@@ -1650,27 +1698,27 @@
         <div class="panel-head" style="padding:0 0 12px;border:0;background:transparent">
           <div>
             <h2>Quản lý nhiên liệu</h2>
-            <p>Theo dõi lượt đổ xăng/dầu, số tiền, số lít, đơn giá và chi phí theo tháng</p>
+            <p>Theo dõi lượt đổ xăng/dầu hoặc sạc điện, số tiền, lượng tiêu thụ, đơn giá và chi phí theo tháng</p>
           </div>
-          <button class="btn primary" data-action="addRecord" data-kind="fuel">Thêm đổ nhiên liệu</button>
+          <button class="btn primary" data-action="addRecord" data-kind="fuel">Thêm nhiên liệu/sạc</button>
         </div>
         <div class="fuel-summary">
-          <div class="mini"><span>Tổng số lít</span><strong>${formatNumber(totalLiters)} L</strong></div>
+          <div class="mini"><span>Tổng lượng</span><strong>${totalQuantity}</strong></div>
           <div class="mini"><span>Tổng tiền</span><strong>${currency(totalCost)}</strong></div>
           <div class="mini"><span>Lần gần nhất</span><strong>${latest ? dateText(latest.date) : "Chưa có"}</strong></div>
         </div>
         ${rows.length ? `${renderFuelChart(rows)}
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Ngày</th><th>Km</th><th>Loại</th><th>Số tiền</th><th>Số lít</th><th>Đơn giá</th><th>Cây xăng</th><th>Ghi chú</th><th></th></tr></thead>
+              <thead><tr><th>Ngày</th><th>Km</th><th>Loại</th><th>Số tiền</th><th>Lượng</th><th>Đơn giá</th><th>Nơi đổ/sạc</th><th>Ghi chú</th><th></th></tr></thead>
               <tbody>${rows.map((row) => `
                 <tr>
                   <td>${dateText(row.date)}</td>
                   <td>${formatNumber(row.odometer)}</td>
-                  <td>${escapeHtml(row.fuelType || "Chưa chọn")}</td>
+                  <td>${escapeHtml(row.fuelType || "Chưa chọn")}${row.chargeType ? `<br><span class="vehicle-meta">${escapeHtml(row.chargeType)}</span>` : ""}</td>
                   <td>${currency(fuelTotal(row))}</td>
-                  <td>${formatNumber(row.liters)} L</td>
-                  <td>${currency(row.unitPrice)}</td>
+                  <td>${formatNumber(fuelQuantity(row))} ${fuelUnit(row)}</td>
+                  <td>${currency(fuelUnitPrice(row))}/${fuelUnit(row)}</td>
                   <td>${escapeHtml(row.station || "")}</td>
                   <td>${escapeHtml(row.note || "")}</td>
                   <td><div class="actions"><button class="btn icon" title="Sửa" data-action="editRecord" data-kind="fuel" data-id="${row.id}">✎</button><button class="btn icon" title="Xóa" data-action="deleteRecord" data-kind="fuel" data-id="${row.id}">×</button></div></td>
@@ -1758,10 +1806,15 @@
           label: key === "Chưa rõ" ? key : `${key.slice(5)}/${key.slice(2, 4)}`,
           rows: [],
           liters: 0,
+          kwh: 0,
           cost: 0
         };
         month.rows.push(row);
-        month.liters += numberValue(row.liters);
+        if (fuelUnit(row) === "kWh") {
+          month.kwh += fuelQuantity(row);
+        } else {
+          month.liters += fuelQuantity(row);
+        }
         month.cost += fuelTotal(row);
         monthly.set(key, month);
       });
@@ -1777,15 +1830,15 @@
               <div class="chart-month">
                 <div class="chart-month-title">
                   <span>${month.label}</span>
-                  <span>${month.rows.length} lần · ${formatNumber(month.liters)} L</span>
+                  <span>${month.rows.length} lần · ${quantitySummaryText(month.liters, month.kwh)}</span>
                 </div>
                 <div class="chart-bars">
                   ${month.rows.map((row) => {
                     const unitPrice = fuelUnitPrice(row);
                     const height = Math.max(8, Math.round((unitPrice / maxUnitPrice) * 112));
                     return `
-                      <div class="bar" title="${dateText(row.date)} · ${row.fuelType || "Nhiên liệu"}: ${currency(unitPrice)}/L · ${currency(fuelTotal(row))} · ${formatNumber(row.liters)} L">
-                        <span class="bar-value">${shortCurrency(unitPrice)}/L</span>
+                      <div class="bar" title="${dateText(row.date)} · ${row.fuelType || "Nhiên liệu"}: ${currency(unitPrice)}/${fuelUnit(row)} · ${currency(fuelTotal(row))} · ${formatNumber(fuelQuantity(row))} ${fuelUnit(row)}">
+                        <span class="bar-value">${shortCurrency(unitPrice)}/${fuelUnit(row)}</span>
                         <div class="bar-fill" style="height:${height}px"></div>
                         <span class="bar-label">${row.date ? row.date.slice(8, 10) : "--"}</span>
                       </div>
@@ -2007,6 +2060,7 @@
           ${input("date", "Ngày đổ", "date", true)}
           ${numberInput("odometer", "Số km lúc đổ", false, "VD: 78250", "1")}
           ${selectInput("fuelType", "Loại nhiên liệu", fuelPriceList().map((item) => item.type), true)}
+          ${chargeTypeInput()}
           <div class="field wide"><span class="vehicle-meta">Bảng giá: ${escapeHtml(state.fuelPriceSource || seedData.fuelPriceSource)} · hiệu lực ${escapeHtml(state.fuelPriceEffectiveFrom || seedData.fuelPriceEffectiveFrom)}</span></div>
           ${numberInput("amount", "Số tiền", true, "VD: 1200000", "1")}
           ${numberInput("liters", "Số lít", false, "Tự tính nếu có đơn giá", "0.01")}
@@ -2061,11 +2115,14 @@
         };
       }
       if (data.kind === "fuel") {
+        rememberCustomUnitPrice(data);
         return {
           ...base,
           date: data.date,
           odometer: numberValue(data.odometer),
           fuelType: data.fuelType,
+          chargeType: data.fuelType === "Điện" ? data.chargeType : "",
+          unit: data.fuelType === "Điện" ? "kWh" : "L",
           liters: numberValue(data.liters),
           unitPrice: numberValue(data.unitPrice),
           amount: numberValue(data.amount) || numberValue(data.liters) * numberValue(data.unitPrice),
@@ -2170,7 +2227,10 @@
           fuelPriceEffectiveFrom: data.fuelPriceEffectiveFrom || seedData.fuelPriceEffectiveFrom,
           fuelPriceSource: data.fuelPriceSource || seedData.fuelPriceSource,
           fuelPriceSourceUrl: data.fuelPriceSourceUrl || seedData.fuelPriceSourceUrl,
+          customFuelPrices: data.customFuelPrices || {},
+          customChargingPrices: data.customChargingPrices || {},
           fuelPrices: data.fuelPrices || structuredClone(seedData.fuelPrices),
+          chargingPrices: data.chargingPrices || structuredClone(seedData.chargingPrices),
           vehicles: data.vehicles || [],
           repairs: data.repairs || [],
           fuel: data.fuel || [],
@@ -2190,14 +2250,14 @@
     }
 
     function titleForKind(kind) {
-      return kind === "repairs" ? "Thêm sửa chữa" : kind === "fuel" ? "Thêm đổ nhiên liệu" : kind === "trips" ? "Thêm hành trình" : "Thêm giấy tờ";
+      return kind === "repairs" ? "Thêm sửa chữa" : kind === "fuel" ? "Thêm nhiên liệu/sạc" : kind === "trips" ? "Thêm hành trình" : "Thêm giấy tờ";
     }
 
     function subtitleForKind(kind) {
       return kind === "repairs"
         ? "Nhập hạng mục, phụ tùng, nơi sửa, km, chi phí và ảnh hóa đơn"
         : kind === "fuel"
-          ? "Nhập số lít, đơn giá, số km và địa điểm đổ"
+          ? "Nhập số tiền, loại nhiên liệu, lít hoặc kWh, đơn giá và địa điểm"
           : kind === "trips"
           ? "Nhập tuyến chạy, tài xế, km và tiền nhiên liệu"
           : "Nhập hạn giấy tờ, chi phí và ghi chú";
@@ -2247,12 +2307,43 @@
       select.innerHTML = `${includeBlank ? `<option value="">Chưa chọn</option>` : ""}${fuelPriceList().map((item) => `<option value="${escapeHtml(item.type)}">${escapeHtml(item.type)}</option>`).join("")}`;
     }
 
+    function chargeTypeInput() {
+      return `
+        <div class="field" id="chargeTypeField">
+          <label>Loại trạm sạc</label>
+          <select name="chargeType">
+            ${chargingPriceList().map((item) => `<option value="${escapeHtml(item.type)}">${escapeHtml(item.type)}</option>`).join("")}
+          </select>
+        </div>
+      `;
+    }
+
     function attachFuelAutoCalc() {
       const fuelType = recordForm.elements.fuelType;
+      const chargeType = recordForm.elements.chargeType;
       const amount = recordForm.elements.amount;
       const liters = recordForm.elements.liters;
       const unitPrice = recordForm.elements.unitPrice;
       if (!amount || !liters || !unitPrice) return;
+
+      const applyMode = (forcePrice = false) => {
+        const electric = fuelType?.value === "Điện";
+        const chargeTypeField = recordFields.querySelector("#chargeTypeField");
+        const litersLabel = recordFields.querySelector("input[name='liters']")?.previousElementSibling;
+        const priceLabel = recordFields.querySelector("input[name='unitPrice']")?.previousElementSibling;
+        const stationLabel = recordFields.querySelector("input[name='station']")?.previousElementSibling;
+        if (chargeTypeField) chargeTypeField.style.display = electric ? "grid" : "none";
+        if (litersLabel) litersLabel.textContent = electric ? "Số kWh" : "Số lít";
+        if (priceLabel) priceLabel.textContent = electric ? "Đơn giá/kWh" : "Đơn giá/lít";
+        if (stationLabel) stationLabel.textContent = electric ? "Trạm sạc" : "Cây xăng";
+        liters.placeholder = electric ? "Tự tính nếu có đơn giá/kWh" : "Tự tính nếu có đơn giá";
+        unitPrice.placeholder = electric ? "Tự tính nếu có số kWh" : "Tự tính nếu có số lít";
+        if (recordForm.elements.station) recordForm.elements.station.placeholder = electric ? "Tên trạm sạc hoặc địa điểm" : "Tên cây xăng hoặc địa điểm";
+        if (electric) {
+          const price = chargingPriceFor(chargeType?.value);
+          if (price && (forcePrice || !unitPrice.value)) unitPrice.value = price;
+        }
+      };
 
       const update = (changed) => {
         const money = numberValue(amount.value);
@@ -2280,17 +2371,31 @@
       liters.addEventListener("input", () => update("liters"));
       unitPrice.addEventListener("input", () => update("unitPrice"));
       fuelType?.addEventListener("change", () => {
-        const price = fuelPriceFor(fuelType.value);
+        applyMode(true);
+        const price = fuelType.value === "Điện" ? chargingPriceFor(chargeType?.value) : fuelPriceFor(fuelType.value);
         if (price) {
           unitPrice.value = price;
           update("unitPrice");
           showToast(`Đã lấy đơn giá tham khảo cho ${fuelType.value}`);
         }
       });
+      chargeType?.addEventListener("change", () => {
+        if (fuelType?.value !== "Điện") return;
+        const price = chargingPriceFor(chargeType.value);
+        if (price) {
+          unitPrice.value = price;
+          update("unitPrice");
+          showToast(`Đã lấy đơn giá sạc cho ${chargeType.value}`);
+        } else {
+          unitPrice.value = "";
+          showToast("Chọn Khác/Nhập tay: nhập đơn giá/kWh thủ công");
+        }
+      });
       if (fuelType?.value && !unitPrice.value) {
-        const price = fuelPriceFor(fuelType.value);
+        const price = fuelType.value === "Điện" ? chargingPriceFor(chargeType?.value) : fuelPriceFor(fuelType.value);
         if (price) unitPrice.value = price;
       }
+      applyMode(false);
       update("amount");
     }
 
@@ -2328,7 +2433,39 @@
     }
 
     function fuelPriceFor(type) {
-      return numberValue(fuelPriceList().find((item) => item.type === type)?.unitPrice);
+      return numberValue(state.customFuelPrices?.[type]?.unitPrice) || numberValue(fuelPriceList().find((item) => item.type === type)?.unitPrice);
+    }
+
+    function chargingPriceList() {
+      if (!Array.isArray(state.chargingPrices)) state.chargingPrices = structuredClone(seedData.chargingPrices);
+      return state.chargingPrices;
+    }
+
+    function chargingPriceFor(type) {
+      return numberValue(state.customChargingPrices?.[type]?.unitPrice) || numberValue(chargingPriceList().find((item) => item.type === type)?.unitPrice);
+    }
+
+    function rememberCustomUnitPrice(data) {
+      const unitPrice = numberValue(data.unitPrice);
+      if (!unitPrice) return;
+      const now = new Date().toISOString();
+      if (data.fuelType === "Điện") {
+        if (!data.chargeType) return;
+        state.customChargingPrices = state.customChargingPrices || {};
+        state.customChargingPrices[data.chargeType] = {
+          unitPrice,
+          source: "Giá custom gần nhất",
+          updatedAt: now
+        };
+        return;
+      }
+      if (!data.fuelType) return;
+      state.customFuelPrices = state.customFuelPrices || {};
+      state.customFuelPrices[data.fuelType] = {
+        unitPrice,
+        source: "Giá custom gần nhất",
+        updatedAt: now
+      };
     }
 
     function fuelTotal(record) {
@@ -2338,8 +2475,29 @@
     function fuelUnitPrice(record) {
       const unitPrice = numberValue(record.unitPrice);
       if (unitPrice) return unitPrice;
-      const liters = numberValue(record.liters);
-      return liters ? fuelTotal(record) / liters : 0;
+      const quantity = fuelQuantity(record);
+      return quantity ? fuelTotal(record) / quantity : 0;
+    }
+
+    function fuelUnit(record) {
+      return record?.fuelType === "Điện" || record?.unit === "kWh" ? "kWh" : "L";
+    }
+
+    function fuelQuantity(record) {
+      return numberValue(record.liters);
+    }
+
+    function fuelQuantitySummary(rows) {
+      const liters = rows.filter((row) => fuelUnit(row) === "L").reduce((sum, row) => sum + fuelQuantity(row), 0);
+      const kwh = rows.filter((row) => fuelUnit(row) === "kWh").reduce((sum, row) => sum + fuelQuantity(row), 0);
+      return quantitySummaryText(liters, kwh);
+    }
+
+    function quantitySummaryText(liters, kwh) {
+      const parts = [];
+      if (liters) parts.push(`${formatNumber(liters)} L`);
+      if (kwh) parts.push(`${formatNumber(kwh)} kWh`);
+      return parts.length ? parts.join(" · ") : "0";
     }
 
     function formatNumber(value) {
