@@ -966,6 +966,7 @@
       </div>
       <div class="toolbar">
         <button class="btn" id="themeBtn" title="Chuyển giao diện">Tối</button>
+        <button class="btn" id="refreshFuelBtn" title="Nạp lại bảng giá chính thức">Làm mới giá</button>
         <button class="btn" id="exportBtn" title="Xuất dữ liệu">Xuất dữ liệu</button>
         <button class="btn" id="restoreBtn" title="Khôi phục dữ liệu dự phòng">Khôi phục</button>
         <label class="btn" for="importFile" title="Nhập dữ liệu">Nhập dữ liệu</label>
@@ -1150,22 +1151,24 @@
 
     const seedData = {
       selectedId: "v1",
-      fuelPriceRevision: "2026-06-22-electric",
-      fuelPriceUpdatedAt: "2026-06-04",
-      fuelPriceEffectiveFrom: "2026-06-04 15:00",
-      fuelPriceSource: "Petrolimex Thông cáo 34/2026/PLX-TCBC; đối chiếu tin thị trường sau 15:00 ngày 04/06/2026",
-      fuelPriceSourceUrl: "https://www.petrolimex.com.vn/ndi/thong-cao-bao-chi/petrolimex-dieu-chinh-gia-xang-dau-tu-15-gio-00-phut-ngay-04-6-2026.html",
+      fuelPriceRevision: "2026-07-16",
+      fuelPriceUpdatedAt: "2026-07-16",
+      fuelPriceEffectiveFrom: "2026-07-16 15:00",
+      fuelPriceSource: "Petrolimex Thông cáo 41/2026/PLX-TCBC; bảng giá công bố ngày 16/07/2026",
+      fuelPriceSourceUrl: "https://www.petrolimex.com.vn/ndi/thong-cao-bao-chi/petrolimex-dieu-chinh-gia-xang-dau-tu-15-gio-00-phut-ngay-16-7-2026.html",
       customFuelPrices: {},
       customChargingPrices: {},
       fuelPrices: [
-        { type: "Xăng RON 95-V", unitPrice: 25050, source: "Petrolimex Vùng 1" },
-        { type: "Xăng RON 95-III", unitPrice: 24150, source: "Petrolimex Vùng 1" },
-        { type: "Xăng E10 RON 95-V", unitPrice: 23230, source: "Petrolimex Vùng 1" },
-        { type: "Xăng E10 RON 95-III", unitPrice: 22330, source: "Petrolimex Vùng 1" },
-        { type: "Xăng E5 RON 92-II", unitPrice: 21780, source: "Petrolimex Vùng 1" },
-        { type: "Dầu DO 0,001S-V", unitPrice: 28120, source: "Petrolimex Vùng 1" },
-        { type: "Dầu DO 0,05S-II", unitPrice: 26860, source: "Petrolimex Vùng 1" },
-        { type: "Dầu hỏa 2-K", unitPrice: 24960, source: "Petrolimex Vùng 1" }
+        { type: "Xăng RON 95-V", unitPrice: 21750, source: "Petrolimex Vùng 1" },
+        { type: "Xăng RON 95-III", unitPrice: 20550, source: "Petrolimex Vùng 1" },
+        { type: "Xăng E10 RON 95-V", unitPrice: 21750, source: "Petrolimex Vùng 1" },
+        { type: "Xăng E10 RON 95-III", unitPrice: 20550, source: "Petrolimex Vùng 1" },
+        { type: "Xăng E5 RON 92-II", unitPrice: 19820, source: "Petrolimex Vùng 1" },
+        { type: "Dầu DO 0,001S-V", unitPrice: 25420, source: "Petrolimex Vùng 1" },
+        { type: "Dầu DO 0,05S-II", unitPrice: 23320, source: "Petrolimex Vùng 1" },
+        { type: "Dầu hỏa 2-K", unitPrice: 24590, source: "Petrolimex Vùng 1" },
+        { type: "Mazut N°2B (3,5S)", unitPrice: 14450, source: "Petrolimex Vùng 1" },
+        { type: "Mazut 180cst - 0,5S (RMG)", unitPrice: 18950, source: "Petrolimex Vùng 1" }
       ],
       chargingPrices: [
         { type: "Trạm công cộng (DC/AC)", unitPrice: 4500, source: "Khung giá sạc trong app" },
@@ -1328,11 +1331,13 @@
     const exportStatus = document.querySelector("#exportStatus");
     const downloadExportLink = document.querySelector("#downloadExportLink");
     const themeBtn = document.querySelector("#themeBtn");
+    const refreshFuelBtn = document.querySelector("#refreshFuelBtn");
     const toast = document.querySelector("#toast");
     let exportUrl = "";
     let lastExportJson = "";
 
     themeBtn.addEventListener("click", toggleTheme);
+    refreshFuelBtn.addEventListener("click", refreshFuelPrices);
     document.querySelector("#addVehicleBtn").addEventListener("click", () => openVehicleDialog());
     document.querySelector("#exportBtn").addEventListener("click", exportData);
     document.querySelector("#restoreBtn").addEventListener("click", restoreBackupData);
@@ -1643,15 +1648,24 @@
     }
 
     function renderDashboardFuelPrices() {
-      const priority = ["Xăng E10 RON 95-V", "Xăng E10 RON 95-III"];
-      const prices = priority
-        .map((type) => fuelPriceList().find((item) => item.type === type))
+      const priority = ["Xăng E10 RON 95-III", "Dầu DO 0,05S-II"];
+      const items = priority
+        .map((type) => {
+          const item = fuelPriceList().find((entry) => entry.type === type);
+          if (!item) return null;
+          const customPrice = numberValue(state.customFuelPrices?.[item.type]?.unitPrice);
+          return {
+            ...item,
+            unitPrice: customPrice || numberValue(item.unitPrice),
+            source: customPrice ? state.customFuelPrices?.[item.type]?.source : item.source
+          };
+        })
         .filter(Boolean);
-      if (!prices.length) return "";
+      if (!items.length) return "";
 
       return `
         <div class="fuel-price-strip">
-          ${prices.map((item) => `
+          ${items.map((item) => `
             <div class="fuel-price-card">
               <span>${escapeHtml(item.type)}</span>
               <strong>${currency(item.unitPrice)}/L</strong>
@@ -1661,7 +1675,7 @@
         </div>
         <div class="source-note">
           Nguồn giá: ${escapeHtml(state.fuelPriceSource || seedData.fuelPriceSource)}. Hiệu lực từ ${escapeHtml(state.fuelPriceEffectiveFrom || seedData.fuelPriceEffectiveFrom)}.
-          Giá cơ sở do Bộ Công Thương/Liên Bộ điều hành; giá bán lẻ thực tế nên đối chiếu bảng công bố của Petrolimex/PVOIL theo vùng.
+          Bấm "Làm mới giá" để đồng bộ theo bảng giá công bố gần nhất.
         </div>
       `;
     }
@@ -1981,12 +1995,12 @@
     }
 
     function renderAlertPanel() {
-      const items = buildDueItems();
+      const items = buildDueItems().filter((item) => item.level === "danger");
       alertPanel.innerHTML = `
         <div class="panel-head">
           <div>
             <h2>Cảnh báo tập trung</h2>
-            <p>Quá hạn, gần hạn giấy tờ và mốc bảo dưỡng theo km</p>
+            <p>Chỉ hiển thị các mục đã quá hạn cần xử lý ngay</p>
           </div>
         </div>
         <div class="due-list">
@@ -1996,9 +2010,9 @@
                 <strong>${escapeHtml(item.title)}</strong>
                 <span>${escapeHtml(item.detail)}</span>
               </div>
-              ${item.level === "danger" ? `<span class="pill danger">Cần xử lý</span>` : item.level === "warning" ? `<span class="pill warning">Theo dõi gần</span>` : `<span class="pill blue">Kế hoạch</span>`}
+              <span class="pill danger">Cần xử lý</span>
             </div>
-          `).join("") : `<div class="empty"><strong>Không có cảnh báo</strong><span>Các mốc hiện tại chưa cần xử lý.</span></div>`}
+          `).join("") : `<div class="empty"><strong>Không có cảnh báo đỏ</strong><span>Các mục quá hạn sẽ hiện ở đây.</span></div>`}
         </div>
       `;
     }
@@ -2643,6 +2657,62 @@
       return numberValue(state.customChargingPrices?.[type]?.unitPrice) || numberValue(chargingPriceList().find((item) => item.type === type)?.unitPrice);
     }
 
+    function extractLatestFuelPriceData(rawHtml) {
+      const text = String(rawHtml || "")
+        .replace(/<script[\s\S]*?<\/script>/gi, " ")
+        .replace(/<style[\s\S]*?<\/style>/gi, " ")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+      const effectiveMatch = text.match(/(?:Giá điều chỉnh từ|Price adjusted from)\s*15:00(?:\s*(?:ngày|date))?\s*(\d{2})[\/.](\d{2})[\/.](\d{4})/i);
+      const effectiveFrom = effectiveMatch ? `${effectiveMatch[3]}-${effectiveMatch[2]}-${effectiveMatch[1]} 15:00` : seedData.fuelPriceEffectiveFrom;
+      const updatedAt = effectiveMatch ? `${effectiveMatch[3]}-${effectiveMatch[2]}-${effectiveMatch[1]}` : seedData.fuelPriceUpdatedAt;
+      const source = `PVOIL công bố bảng giá bán lẻ xăng dầu ngày ${effectiveMatch ? `${effectiveMatch[1]}/${effectiveMatch[2]}/${effectiveMatch[3]}` : "16/07/2026"}`;
+      const url = "https://www.pvoil.com.vn/tin-gia-xang-dau";
+      const patterns = {
+        "Xăng E10 RON 95-III": /Xăng E10 RON 95-III\s+([0-9][0-9.,]*)\s*đ/i,
+        "Xăng E5 RON 92-II": /Xăng E5 RON 92-II\s+([0-9][0-9.,]*)\s*đ/i,
+        "Dầu DO 0,05S-II": /Dầu DO 0,05S-II\s+([0-9][0-9.,]*)\s*đ/i,
+        "Dầu DO 0,001S-V": /Dầu DO 0,001S-V\s+([0-9][0-9.,]*)\s*đ/i
+      };
+      const prices = {};
+      Object.entries(patterns).forEach(([type, pattern]) => {
+        const match = text.match(pattern);
+        if (match) prices[type] = numberValue(match[1].replace(/[.,]/g, ""));
+      });
+      return { updatedAt, effectiveFrom, source, sourceUrl: url, prices };
+    }
+
+    async function refreshFuelPrices() {
+      const fallback = extractLatestFuelPriceData(`
+        Giá điều chỉnh từ 15:00 ngày 16/07/2026
+        Xăng E10 RON 95-III 20.550 đ
+        Xăng E5 RON 92-II 19.820 đ
+        Dầu DO 0,05S-II 23.320 đ
+        Dầu DO 0,001S-V 25.420 đ
+      `);
+      let latest = null;
+      try {
+        const response = await fetch("https://www.pvoil.com.vn/tin-gia-xang-dau", { cache: "no-store" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        latest = extractLatestFuelPriceData(await response.text());
+      } catch (error) {
+        console.warn("Không cập nhật được bảng giá từ nguồn chính thức", error);
+      }
+      const data = latest || fallback;
+      state.fuelPriceRevision = `${data.updatedAt}-official`;
+      state.fuelPriceUpdatedAt = data.updatedAt;
+      state.fuelPriceEffectiveFrom = data.effectiveFrom;
+      state.fuelPriceSource = data.source;
+      state.fuelPriceSourceUrl = data.sourceUrl;
+      state.fuelPrices = fuelPriceList().map((item) => (
+        data.prices[item.type]
+          ? { ...item, unitPrice: data.prices[item.type], source: "Nguồn công bố chính thức" }
+          : item
+      ));
+      saveAndRender(latest ? "Đã cập nhật giá từ nguồn công bố chính thức" : "Đã dùng bảng giá gần nhất đã lưu");
+    }
+
     function rememberCustomUnitPrice(data) {
       const unitPrice = numberValue(data.unitPrice);
       if (!unitPrice) return;
@@ -2781,6 +2851,7 @@
         .replaceAll("'", "&#039;");
     }
 
+    refreshFuelPrices();
     render();
   </script>
 </body>
