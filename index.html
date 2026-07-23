@@ -2476,6 +2476,7 @@
       const liters = recordForm.elements.liters;
       const unitPrice = recordForm.elements.unitPrice;
       if (!amount || !liters || !unitPrice) return;
+      let lastEdited = "";
 
       const applyMode = (forcePrice = false) => {
         const electric = fuelType?.value === "Điện";
@@ -2497,24 +2498,47 @@
       };
 
       const update = (changed) => {
+        lastEdited = changed;
         const money = numberValue(amount.value);
         const litersValue = numberValue(liters.value);
         const priceValue = numberValue(unitPrice.value);
         if (changed === "amount") {
-          if (money && priceValue && !litersValue) liters.value = formatDecimal(money / priceValue, 2);
-          if (money && litersValue && !priceValue) unitPrice.value = Math.round(money / litersValue);
-          return;
+          if (money && priceValue) {
+            liters.value = formatDecimal(money / priceValue, 2);
+            return;
+          }
+          if (money && litersValue) {
+            unitPrice.value = Math.round(money / litersValue);
+            return;
+          }
         }
-        if (changed === "unitPrice" && money && priceValue) {
-          liters.value = formatDecimal(money / priceValue, 2);
-          return;
+        if (changed === "unitPrice" || changed === "fuelType" || changed === "chargeType") {
+          if (money && priceValue) {
+            liters.value = formatDecimal(money / priceValue, 2);
+            return;
+          }
+          if (litersValue && priceValue) {
+            amount.value = Math.round(litersValue * priceValue);
+            return;
+          }
         }
-        if (changed === "liters" && money && litersValue) {
-          unitPrice.value = Math.round(money / litersValue);
-          return;
+        if (changed === "liters") {
+          if (money && litersValue) {
+            unitPrice.value = Math.round(money / litersValue);
+            return;
+          }
+          if (litersValue && priceValue) {
+            amount.value = Math.round(litersValue * priceValue);
+            return;
+          }
         }
         if (!money && litersValue && priceValue) {
           amount.value = Math.round(litersValue * priceValue);
+          return;
+        }
+        if (money && priceValue && !litersValue && lastEdited !== "liters") {
+          liters.value = formatDecimal(money / priceValue, 2);
+          return;
         }
       };
 
@@ -2526,7 +2550,7 @@
         const price = fuelType.value === "Điện" ? chargingPriceFor(chargeType?.value) : fuelPriceFor(fuelType.value);
         if (price) {
           unitPrice.value = price;
-          update("unitPrice");
+          update("fuelType");
           showToast(`Đã lấy đơn giá tham khảo cho ${fuelType.value}`);
         }
       });
@@ -2535,7 +2559,7 @@
         const price = chargingPriceFor(chargeType.value);
         if (price) {
           unitPrice.value = price;
-          update("unitPrice");
+          update("chargeType");
           showToast(`Đã lấy đơn giá sạc cho ${chargeType.value}`);
         } else {
           unitPrice.value = "";
