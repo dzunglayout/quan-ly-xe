@@ -207,6 +207,24 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .ins-overdue-tag{display:inline-block;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700;margin-left:6px}
 
 /* OIL REMINDER */
+/* MAINTENANCE SCHEDULE */
+.maint-schedule-row{display:grid;grid-template-columns:1fr 100px 100px 32px;gap:8px;align-items:center;padding:8px 10px;border-radius:8px;margin-bottom:5px;background:var(--surface2);transition:.15s}
+.maint-schedule-row:hover{background:var(--surface3)}
+.maint-schedule-row.active{border-left:3px solid var(--accent)}
+.maint-schedule-row.disabled{opacity:.45}
+.ms-name{font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:7px}
+.ms-icon{font-size:15px;width:22px;text-align:center;flex-shrink:0}
+.ms-type-tag{font-size:9.5px;background:var(--surface3);color:var(--text3);border-radius:4px;padding:1px 5px;font-weight:600;text-transform:uppercase}
+.ms-input{background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:5px 8px;font-family:var(--mono);font-size:12px;color:var(--text);outline:none;width:100%;text-align:right}
+.ms-input:focus{border-color:var(--accent)}
+.ms-toggle{background:none;border:1px solid var(--border);border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text3);display:flex;align-items:center;justify-content:center;transition:.15s}
+.ms-toggle.on{background:rgba(61,127,255,.15);border-color:var(--accent);color:var(--accent)}
+.ms-toggle:hover{border-color:var(--accent)}
+/* km status badges in table */
+.km-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:10px;font-size:10.5px;font-weight:700;margin-top:2px}
+.km-overdue{background:rgba(255,87,87,.15);color:var(--danger)}
+.km-soon{background:rgba(255,159,67,.15);color:var(--warn)}
+.km-ok{background:rgba(46,204,113,.1);color:var(--success)}
 .oil-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:700;white-space:nowrap}
 .oil-due{background:rgba(255,87,87,.15);color:var(--danger)}
 .oil-soon{background:rgba(255,159,67,.15);color:var(--warn)}
@@ -368,6 +386,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
     </div>
     <div class="nav-section">
       <div class="nav-label">Báo cáo</div>
+      <div class="nav-item" onclick="goPage('schedule',this)"><span class="icon">🗓️</span> Lịch bảo dưỡng</div>
       <div class="nav-item" onclick="goPage('report',this)"><span class="icon">📈</span> Báo cáo chi phí</div>
     </div>
     <div class="nav-section">
@@ -505,6 +524,10 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
       <div class="card"><div class="card-header"><div class="card-title">🔔 Tất cả cảnh báo</div></div><div id="alertsList"></div></div>
     </div>
 
+    <div class="page" id="page-schedule">
+      <div id="schedulePageContent"></div>
+    </div>
+
     <div class="page" id="page-report">
       <div class="stats-grid">
         <div class="stat-card blue"><div class="stat-label">Chi phí sửa chữa</div><div class="stat-value" id="rMaint">—</div><div class="stat-sub">Nghìn VNĐ</div></div>
@@ -568,30 +591,23 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
         <div class="form-group"><label class="form-label">Ngày hoàn thành</label><input class="form-control" type="date" id="mDoneDate"></div>
         <div class="form-group form-full"><label class="form-label">Ghi chú</label><textarea class="form-control" id="mNote" placeholder="Mô tả tình trạng..."></textarea></div>
       <!-- OIL REMINDER SECTION -->
-      <div class="form-full" id="oilReminderSection" style="background:rgba(255,159,67,.06);border:1px solid rgba(255,159,67,.2);border-radius:10px;padding:12px 14px;margin-top:4px;display:none">
-        <div style="font-size:11.5px;font-weight:700;color:var(--warn);margin-bottom:10px">🛢️ Nhắc nhở thay nhớt (Xe máy)</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <div class="form-group">
-            <label class="form-label">Km thay nhớt lần này</label>
-            <input class="form-control" type="number" id="mOilKm" placeholder="Tự lấy từ Km sửa" oninput="calcNextOilKm()">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Chu kỳ thay nhớt (km)</label>
-            <select class="form-control" id="mOilInterval" onchange="calcNextOilKm()">
-              <option value="2000">2.000 km (xe máy tiêu chuẩn)</option>
-              <option value="3000">3.000 km (xe máy cao cấp)</option>
-              <option value="5000">5.000 km (ô tô dầu khoáng)</option>
-              <option value="7500">7.500 km (ô tô dầu bán tổng hợp)</option>
-              <option value="10000">10.000 km (ô tô full synthetic)</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Km cần thay nhớt kế tiếp</label>
-            <input class="form-control" type="number" id="mNextOilKm" placeholder="Tự tính..." style="background:var(--surface3)" readonly>
-          </div>
-          <div class="form-group" style="justify-content:center">
-            <label class="form-label" style="color:var(--text3);font-size:10.5px;line-height:1.6">💡 Km kế tiếp = Km lần này + Chu kỳ<br>App tự cảnh báo khi xe đến gần mốc này</label>
-          </div>
+      <!-- MAINTENANCE SCHEDULE SECTION -->
+      <div class="form-full" id="maintScheduleSection" style="background:rgba(255,159,67,.05);border:1px solid rgba(255,159,67,.2);border-radius:10px;padding:12px 14px;margin-top:4px;display:none">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span style="font-size:13px;font-weight:700;color:var(--warn)">🔧 Nhắc nhở bảo dưỡng định kỳ</span>
+          <span id="msVehicleType" style="font-size:10px;background:var(--surface3);color:var(--text3);padding:1px 7px;border-radius:10px;font-weight:600"></span>
+          <span style="font-size:11px;color:var(--text3);flex:1;text-align:right">Tích ✓ để kích hoạt nhắc nhở</span>
+        </div>
+        <!-- header -->
+        <div style="display:grid;grid-template-columns:1fr 100px 100px 32px;gap:8px;padding:0 10px;margin-bottom:4px">
+          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Hạng mục</div>
+          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;text-align:right">Km lần này</div>
+          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;text-align:right">Km kế tiếp</div>
+          <div></div>
+        </div>
+        <div id="maintScheduleRows"></div>
+        <div style="font-size:10.5px;color:var(--text3);margin-top:8px;line-height:1.5">
+          💡 Km kế tiếp tự tính = Km lần này + Chu kỳ mặc định. Bạn có thể sửa trực tiếp. App cảnh báo khi xe còn ≤ 500km đến mốc.
         </div>
       </div>
       </div>
@@ -762,6 +778,46 @@ let insurances   = [];
 let trips        = [];
 let fuelPrices   = {};   
 let dismissedAlerts = new Set(JSON.parse(localStorage.getItem('autotrack_dismissed')||'[]'));
+
+// ── MAINTENANCE SCHEDULE CATALOG ──
+// each item: { id, icon, name, tag, defaultKm, warningKm, vehicleTypes }
+// vehicleTypes: ['Xe máy'] | ['Ô tô'] | ['all']
+// warningKm: cảnh báo khi còn ≤ X km
+const MAINT_CATALOG = [
+  // ─── Xe máy ───────────────────────────────────────
+  { id:'oil_engine_moto', icon:'🛢️', name:'Dầu động cơ',       tag:'Xe máy', defaultKm:2000,  warningKm:300,  vTypes:['Xe máy'] },
+  { id:'oil_gear_moto',   icon:'⚙️', name:'Dầu hộp số',        tag:'Xe máy', defaultKm:10000, warningKm:500,  vTypes:['Xe máy'] },
+  { id:'belt_moto',       icon:'🔗', name:'Dây curoa / xích',   tag:'Xe máy', defaultKm:25000, warningKm:1000, vTypes:['Xe máy'] },
+  { id:'brake_moto',      icon:'🛑', name:'Bố thắng (má phanh)',tag:'Xe máy', defaultKm:15000, warningKm:500,  vTypes:['Xe máy'] },
+  { id:'airfilter_moto',  icon:'💨', name:'Lọc gió',            tag:'Xe máy', defaultKm:8000,  warningKm:500,  vTypes:['Xe máy'] },
+  { id:'sparkplug_moto',  icon:'⚡', name:'Bugi',               tag:'Xe máy', defaultKm:8000,  warningKm:500,  vTypes:['Xe máy'] },
+  { id:'coolant_moto',    icon:'💧', name:'Nước làm mát',       tag:'Xe máy', defaultKm:20000, warningKm:1000, vTypes:['Xe máy'] },
+  { id:'tire_moto',       icon:'🔵', name:'Lốp xe',             tag:'Xe máy', defaultKm:30000, warningKm:2000, vTypes:['Xe máy'] },
+  // ─── Ô tô ────────────────────────────────────────
+  { id:'oil_engine_car',  icon:'🛢️', name:'Dầu động cơ',       tag:'Ô tô',   defaultKm:5000,  warningKm:500,  vTypes:['Sedan','SUV','Pickup','Van','Xe tải'] },
+  { id:'oil_gear_car',    icon:'⚙️', name:'Dầu hộp số',        tag:'Ô tô',   defaultKm:40000, warningKm:2000, vTypes:['Sedan','SUV','Pickup','Van','Xe tải'] },
+  { id:'oil_brake_car',   icon:'🔴', name:'Dầu phanh',         tag:'Ô tô',   defaultKm:30000, warningKm:2000, vTypes:['Sedan','SUV','Pickup','Van','Xe tải'] },
+  { id:'belt_timing_car', icon:'🔗', name:'Đai cam (timing)',   tag:'Ô tô',   defaultKm:60000, warningKm:3000, vTypes:['Sedan','SUV','Pickup','Van','Xe tải'] },
+  { id:'brake_car',       icon:'🛑', name:'Má phanh',           tag:'Ô tô',   defaultKm:30000, warningKm:2000, vTypes:['Sedan','SUV','Pickup','Van','Xe tải'] },
+  { id:'airfilter_car',   icon:'💨', name:'Lọc gió động cơ',   tag:'Ô tô',   defaultKm:15000, warningKm:1000, vTypes:['Sedan','SUV','Pickup','Van','Xe tải'] },
+  { id:'cabinfilter_car', icon:'🌿', name:'Lọc gió cabin',      tag:'Ô tô',   defaultKm:15000, warningKm:1000, vTypes:['Sedan','SUV','Pickup','Van','Xe tải'] },
+  { id:'sparkplug_car',   icon:'⚡', name:'Bugi',               tag:'Ô tô',   defaultKm:30000, warningKm:2000, vTypes:['Sedan','SUV','Pickup','Van','Xe tải'] },
+  { id:'coolant_car',     icon:'💧', name:'Nước làm mát',       tag:'Ô tô',   defaultKm:40000, warningKm:2000, vTypes:['Sedan','SUV','Pickup','Van','Xe tải'] },
+  { id:'oil_steering_car',icon:'🎯', name:'Dầu trợ lực lái',   tag:'Ô tô',   defaultKm:40000, warningKm:2000, vTypes:['Sedan','SUV','Pickup','Van','Xe tải'] },
+  { id:'tire_car',        icon:'🔵', name:'Lốp xe',             tag:'Ô tô',   defaultKm:50000, warningKm:3000, vTypes:['Sedan','SUV','Pickup','Van','Xe tải'] },
+  { id:'battery_car',     icon:'🔋', name:'Ắc quy',             tag:'Ô tô',   defaultKm:50000, warningKm:3000, vTypes:['Sedan','SUV','Pickup','Van','Xe tải'] },
+];
+
+// Schedule state: { [vehicleId]: { [itemId]: { lastKm, nextKm, enabled } } }
+// Lưu vào localStorage
+function loadScheduleState() {
+  try { return JSON.parse(localStorage.getItem('autotrack_schedule') || '{}'); }
+  catch(e) { return {}; }
+}
+function saveScheduleState(state) {
+  localStorage.setItem('autotrack_schedule', JSON.stringify(state));
+}
+let scheduleState = loadScheduleState();
 
 function savesDismissed(){ localStorage.setItem('autotrack_dismissed', JSON.stringify([...dismissedAlerts])); }
 function dismissAlert(key){ dismissedAlerts.add(key); savesDismissed(); renderAlerts(); renderDashboard(); }
@@ -1017,9 +1073,9 @@ function goPage(name,el){
   if(el) el.classList.add('active');
   document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
-  const T={dashboard:'Dashboard <span>Tổng quan hệ thống</span>',vehicles:'Danh sách xe',maintenance:'Sửa chữa & Bảo dưỡng',fuel:'Nhiên liệu',trips:'Lịch sử hành trình',insurance:'Bảo hiểm & Giấy tờ',alerts:'Cảnh báo',report:'Báo cáo chi phí'};
+  const T={dashboard:'Dashboard <span>Tổng quan hệ thống</span>',vehicles:'Danh sách xe',maintenance:'Sửa chữa & Bảo dưỡng',fuel:'Nhiên liệu',trips:'Lịch sử hành trình',insurance:'Bảo hiểm & Giấy tờ',alerts:'Cảnh báo',schedule:'🗓️ Lịch bảo dưỡng',report:'Báo cáo chi phí'};
   document.getElementById('pageTitle').innerHTML=T[name]||name;
-  ({dashboard:renderDashboard,vehicles:renderVehicles,maintenance:renderMaint,fuel:renderFuel,trips:renderTrips,insurance:renderInsurance,alerts:renderAlerts,report:renderReport}[name]||(() => {}))();
+  ({dashboard:renderDashboard,vehicles:renderVehicles,maintenance:renderMaint,fuel:renderFuel,trips:renderTrips,insurance:renderInsurance,alerts:renderAlerts,schedule:renderSchedule,report:renderReport}[name]||(() => {}))();
 }
 
 // ============================================================
@@ -1038,11 +1094,14 @@ document.addEventListener('DOMContentLoaded', () => {
   if(mVehicle) mVehicle.addEventListener('change', checkOilSection);
   if(mItem) mItem.addEventListener('input', checkOilSection);
   if(mKm) mKm.addEventListener('input', () => {
-    const oilKmEl = document.getElementById('mOilKm');
-    if(oilKmEl && !oilKmEl.value) {
-      oilKmEl.value = mKm.value;
-      calcNextOilKm();
-    }
+    // Điền km vào các ô msLast chưa có giá trị
+    MAINT_CATALOG.forEach(item => {
+      const lastEl = document.getElementById('msLast_'+item.id);
+      if(lastEl && !lastEl.value && !lastEl.disabled){
+        lastEl.value = mKm.value;
+        calcNextMs(item.id, item.defaultKm);
+      }
+    });
   });
 });
 
@@ -1137,36 +1196,95 @@ function openAddMaintenance(){
   sel.innerHTML=vehicles.map(v=>`<option value="${v.id}">${v.plate} · ${v.name}</option>`).join('');
   document.getElementById('mDate').value=today();
   ['mItem','mPlace','mNote','mNextKm','mDoneDate'].forEach(id=>document.getElementById(id).value='');
-  ['mKm','mCost','mOilKm','mNextOilKm'].forEach(id=>document.getElementById(id).value='');
+  ['mKm','mCost'].forEach(id=>document.getElementById(id).value='');
   fillPartsDropdown();
   checkOilSection();
   document.getElementById('modalMaint').classList.add('open');
 }
 
-// Kiểm tra loại xe → hiện/ẩn section nhớt
+// Hiện/ẩn section bảo dưỡng định kỳ + render rows theo loại xe
 function checkOilSection(){
-  const vId = document.getElementById('mVehicle').value;
-  const v = getV(vId);
-  const sec = document.getElementById('oilReminderSection');
-  // Hiện section nếu là Xe máy HOẶC người dùng đang ghi "thay nhớt/dầu" trong item
-  const isMotorbike = v && v.type === 'Xe máy';
-  const itemVal = (document.getElementById('mItem')?.value||'').toLowerCase();
-  const hasOilKeyword = itemVal.includes('nhớt') || itemVal.includes('dầu máy') || itemVal.includes('thay dầu');
-  if(sec) sec.style.display = (isMotorbike || hasOilKeyword) ? 'block' : 'none';
-  // Tự điền km từ ô mKm nếu trống
-  if(sec && sec.style.display !== 'none'){
-    const kmVal = document.getElementById('mKm').value;
-    if(kmVal && !document.getElementById('mOilKm').value)
-      document.getElementById('mOilKm').value = kmVal;
-    calcNextOilKm();
-  }
+  const vId  = document.getElementById('mVehicle')?.value;
+  const v    = getV(vId);
+  const sec  = document.getElementById('maintScheduleSection');
+  if(!sec) return;
+  if(!v){ sec.style.display='none'; return; }
+
+  // Lọc catalog theo loại xe
+  const applicableItems = MAINT_CATALOG.filter(item =>
+    item.vTypes.includes(v.type)
+  );
+
+  if(!applicableItems.length){ sec.style.display='none'; return; }
+  sec.style.display='block';
+
+  // Label loại xe
+  const typeTag = document.getElementById('msVehicleType');
+  if(typeTag) typeTag.textContent = v.type;
+
+  // Tự điền km từ ô mKm
+  const baseKm = +document.getElementById('mKm')?.value || getCurrentKm(v) || 0;
+
+  // Render rows
+  const container = document.getElementById('maintScheduleRows');
+  if(!container) return;
+
+  const vState = scheduleState[vId] || {};
+
+  container.innerHTML = applicableItems.map(item => {
+    const st   = vState[item.id] || {};
+    const enabled  = st.enabled !== false; // default ON
+    const lastKm   = st.lastKm  || '';
+    const nextKm   = st.nextKm  || (lastKm ? +lastKm + item.defaultKm : '');
+    return `<div class="maint-schedule-row ${enabled?'active':'disabled'}" id="msrow_${item.id}">
+      <div class="ms-name">
+        <span class="ms-icon">${item.icon}</span>
+        <span>${item.name}</span>
+        <span class="ms-type-tag">${item.defaultKm>=1000?(item.defaultKm/1000)+'k':item.defaultKm}km</span>
+      </div>
+      <input class="ms-input" type="number" id="msLast_${item.id}"
+        value="${lastKm}" placeholder="${baseKm||'km lần này'}"
+        oninput="calcNextMs('${item.id}',${item.defaultKm})"
+        ${enabled?'':'disabled'}>
+      <input class="ms-input" type="number" id="msNext_${item.id}"
+        value="${nextKm}" placeholder="Km kế tiếp"
+        ${enabled?'':'disabled'}>
+      <button class="ms-toggle ${enabled?'on':''}" id="mstgl_${item.id}"
+        onclick="toggleMsItem('${item.id}','${vId}')"
+        title="${enabled?'Tắt nhắc nhở':'Bật nhắc nhở'}">
+        ${enabled?'✓':'○'}
+      </button>
+    </div>`;
+  }).join('');
 }
 
-function calcNextOilKm(){
-  const oilKm = +document.getElementById('mOilKm').value || 0;
-  const interval = +document.getElementById('mOilInterval').value || 2000;
-  document.getElementById('mNextOilKm').value = oilKm > 0 ? oilKm + interval : '';
+function calcNextMs(itemId, defaultKm){
+  const lastEl = document.getElementById('msLast_'+itemId);
+  const nextEl = document.getElementById('msNext_'+itemId);
+  if(!lastEl||!nextEl) return;
+  const last = +lastEl.value || 0;
+  if(last > 0) nextEl.value = last + defaultKm;
 }
+
+function toggleMsItem(itemId, vId){
+  if(!scheduleState[vId]) scheduleState[vId] = {};
+  const cur = scheduleState[vId][itemId] || {};
+  const newEnabled = !(cur.enabled !== false);
+  scheduleState[vId][itemId] = { ...cur, enabled: newEnabled };
+  saveScheduleState(scheduleState);
+  // Re-render just this row UI
+  const row = document.getElementById('msrow_'+itemId);
+  const tgl = document.getElementById('mstgl_'+itemId);
+  const lastIn = document.getElementById('msLast_'+itemId);
+  const nextIn = document.getElementById('msNext_'+itemId);
+  if(row){ row.className='maint-schedule-row '+(newEnabled?'active':'disabled'); }
+  if(tgl){ tgl.className='ms-toggle '+(newEnabled?'on':''); tgl.textContent=newEnabled?'✓':'○'; }
+  if(lastIn) lastIn.disabled=!newEnabled;
+  if(nextIn) nextIn.disabled=!newEnabled;
+}
+
+// Legacy shim — không còn dùng nhưng giữ để không lỗi nếu còn ref
+function calcNextOilKm(){}
 function openEditMaintenance(id){
   const m = maintenances.find(x => x.id == id); if(!m) return;
   editId = id;
@@ -1185,11 +1303,6 @@ function openEditMaintenance(id){
   document.getElementById('mDoneDate').value = m.doneDate ? m.doneDate.split('T')[0] : '';
   document.getElementById('mNote').value = m.note || '';
 
-  // nạp dữ liệu nhớt nếu có
-  document.getElementById('mOilKm').value = m.oilKm || '';
-  document.getElementById('mNextOilKm').value = m.nextOilKm || '';
-  if(m.oilInterval) document.getElementById('mOilInterval').value = m.oilInterval;
-
   // 1. PHẢI MỞ MODAL LÊN TRƯỚC để HTML hiển thị sẵn sàng trong DOM
   document.getElementById('modalMaint').classList.add('open');
   
@@ -1205,8 +1318,31 @@ async function saveMaintenance(){
   const checkedBoxes = document.querySelectorAll('input[name="maintenance_parts"]:checked');
   const selectedParts = Array.from(checkedBoxes).map(cb => cb.value);
   
-  // Lấy thông tin nhớt nếu section đang hiển thị
-  const oilSec = document.getElementById('oilReminderSection');
+  // Lưu schedule state từ form vào localStorage
+  const msSec = document.getElementById('maintScheduleSection');
+  if(msSec && msSec.style.display !== 'none'){
+    const vId = document.getElementById('mVehicle').value;
+    if(!scheduleState[vId]) scheduleState[vId] = {};
+    const baseKm = document.getElementById('mKm').value;
+    MAINT_CATALOG.forEach(item => {
+      const lastEl = document.getElementById('msLast_'+item.id);
+      const nextEl = document.getElementById('msNext_'+item.id);
+      if(!lastEl) return;
+      const cur = scheduleState[vId][item.id] || {};
+      const lastVal = lastEl.value || baseKm || '';
+      const nextVal = nextEl?.value || (lastVal ? +lastVal + item.defaultKm : '');
+      scheduleState[vId][item.id] = {
+        ...cur,
+        lastKm: lastVal,
+        nextKm: nextVal,
+        updatedAt: today()
+      };
+    });
+    saveScheduleState(scheduleState);
+  }
+
+  // Backward compat fields (oilKm dùng cho nhớt động cơ)
+  const oilSec = document.getElementById('maintScheduleSection');
   const oilVisible = oilSec && oilSec.style.display !== 'none';
   const data = {
     vehicleId: document.getElementById('mVehicle').value,
@@ -1220,9 +1356,9 @@ async function saveMaintenance(){
     date: document.getElementById('mDate').value,
     doneDate: document.getElementById('mDoneDate').value || '',
     note: document.getElementById('mNote').value,
-    oilKm: oilVisible ? (document.getElementById('mOilKm').value || '') : '',
-    nextOilKm: oilVisible ? (document.getElementById('mNextOilKm').value || '') : '',
-    oilInterval: oilVisible ? (document.getElementById('mOilInterval').value || '2000') : '',
+    oilKm: oilVisible ? (()=>{const vId=document.getElementById('mVehicle').value; const st=(scheduleState[vId]||{})['oil_engine_moto']||(scheduleState[vId]||{})['oil_engine_car']||{}; return st.lastKm||'';})() : '',
+    nextOilKm: oilVisible ? (()=>{const vId=document.getElementById('mVehicle').value; const st=(scheduleState[vId]||{})['oil_engine_moto']||(scheduleState[vId]||{})['oil_engine_car']||{}; return st.nextKm||'';})() : '',
+    oilInterval: '',
   };
    
   setBtnLoading('mSaveBtn',true);
@@ -1838,22 +1974,27 @@ function renderVehicles(){
 }
 
 let mFilter='all'; let mSearch='';
-// Tạo badge trạng thái nhớt
-function oilBadge(vehicleId, nextOilKm){
-  const v = getV(vehicleId);
-  if(!v) return '';
+// Badge tổng hợp bảo dưỡng cho 1 xe
+function maintBadges(vehicleId){
+  const v = getV(vehicleId); if(!v) return '';
   const curKm = getCurrentKm(v);
-  const next = n(nextOilKm);
-  if(!next) return '';
-  const remaining = next - curKm;
-  if(curKm >= next){
-    return `<span class="oil-badge oil-due">🛢️ QUÁ HẠN +${fmtK(curKm-next)}</span>`;
-  } else if(remaining <= 500){
-    return `<span class="oil-badge oil-soon">🛢️ Còn ${fmtK(remaining)}</span>`;
-  } else {
-    return `<span class="oil-badge oil-ok">🛢️ Nhớt OK (${fmtK(remaining)} nữa)</span>`;
-  }
+  const vState = scheduleState[vehicleId] || {};
+  const items = MAINT_CATALOG.filter(item => item.vTypes.includes(v.type));
+  const badges = [];
+  items.forEach(item => {
+    const st = vState[item.id];
+    if(!st || st.enabled===false || !st.nextKm) return;
+    const next = n(st.nextKm);
+    const rem  = next - curKm;
+    if(curKm >= next)
+      badges.push(`<span class="km-badge km-overdue">${item.icon} QUÁ HẠN</span>`);
+    else if(rem <= item.warningKm)
+      badges.push(`<span class="km-badge km-soon">${item.icon} Còn ${fmtK(rem)}</span>`);
+  });
+  return badges.join('');
 }
+// legacy shim
+function oilBadge(vehicleId){ return maintBadges(vehicleId); }
 
 function filterMaint(t,el){ mFilter=t; document.querySelectorAll('.filter-chip').forEach(x=>x.classList.remove('active')); if(el)el.classList.add('active'); renderMaint(); }
 function searchMaint(q){ mSearch=q.toLowerCase(); renderMaint(); }
@@ -1877,7 +2018,7 @@ function renderMaint(){
       <td data-label="Số Km"><div>
         <span class="km-text">${fmtK(m.km)}</span>
         ${m.nextKm?`<br><span style="font-size:10px;color:var(--text3)">Hẹn BD:${fmtK(m.nextKm)}</span>`:''}
-        ${m.nextOilKm?`<br>${oilBadge(m.vehicleId,m.nextOilKm)}`:''}
+        ${maintBadges(m.vehicleId)}
       </div></td>
       <td data-label="Địa điểm" style="font-size:12px">${m.place||''}</td>
       <td data-label="Chi phí"><span class="price-text" style="color:var(--warn)">${fmtC(m.cost)}K</span></td>
@@ -2106,48 +2247,56 @@ function getAlerts(){
       if(curKm>=(n(m.nextKm)-3000)) alerts.push({type:'blue',title:'Sắp đến hạn bảo dưỡng',sub:`${vName(v.id)} — ${m.item} (${fmtK(m.nextKm)})`,time:'—'});
     });
 
-    // ── Cảnh báo thay nhớt (dựa trên nextOilKm từ maintenance records) ──
-    // Lấy bản ghi thay nhớt mới nhất có nextOilKm
-    const oilRecords = maintenances
-      .filter(m => m.vehicleId == v.id && n(m.nextOilKm) > 0)
-      .sort((a,b) => n(b.oilKm||b.km) - n(a.oilKm||a.km));
+    // ── Cảnh báo bảo dưỡng định kỳ (từ scheduleState) ──
+    const vState = scheduleState[v.id] || {};
+    const applicableItems = MAINT_CATALOG.filter(item => item.vTypes.includes(v.type));
 
-    if(oilRecords.length > 0){
-      const latestOil = oilRecords[0];
-      const nextOil   = n(latestOil.nextOilKm);
-      const oilAt     = n(latestOil.oilKm || latestOil.km);
-      const interval  = n(latestOil.oilInterval) || 2000;
-      const remaining = nextOil - curKm;
+    if(applicableItems.length === 0 && v.type === 'Xe máy'){
+      // Xe máy chưa thiết lập schedule
+      alerts.push({
+        type:'blue', dismissable:true,
+        key:`no_schedule_${v.id}`,
+        title:'🔧 Chưa thiết lập lịch bảo dưỡng',
+        sub:`${vName(v.id)} — Mở Sửa chữa > Ghi nhận để cài chu kỳ thay nhớt, dầu hộp số...`,
+        time:'—'
+      });
+    }
 
-      if(curKm >= nextOil){
-        // Đã vượt mốc
+    applicableItems.forEach(item => {
+      const st = vState[item.id];
+      if(!st || st.enabled === false) return; // không kích hoạt → bỏ qua
+      const nextKm = n(st.nextKm);
+      if(!nextKm) return;
+      const remaining = nextKm - curKm;
+
+      if(curKm >= nextKm){
         alerts.push({
-          type:'red',
-          title:'🛢️ QUÁ HẠN thay nhớt!',
-          sub:`${vName(v.id)} — Đã đi thêm ${fmtK(curKm - nextOil)} sau mốc ${fmtK(nextOil)} (chu kỳ ${fmtK(interval)})`,
+          type:'red', dismissable:true,
+          key:`maint_due_${v.id}_${item.id}_${nextKm}`,
+          title:`${item.icon} QUÁ HẠN: ${item.name}`,
+          sub:`${vName(v.id)} — Đã đi thêm ${fmtK(curKm - nextKm)} sau mốc ${fmtK(nextKm)}`,
           time:`Km hiện tại: ${fmtK(curKm)}`,
-          key:`oil_due_${v.id}_${nextOil}`,
-          dismissable:true,
-          action:`goPage('maintenance', document.querySelector('.nav-item:nth-child(3)'))`,
-          actionLabel:'Ghi nhận'
+          actionLabel:'Ghi nhận',
+          action:`openAddMaintenance()`
         });
-      } else if(remaining <= 500){
-        // Còn ≤ 500km
+      } else if(remaining <= item.warningKm){
         alerts.push({
-          type:'orange',
-          title:'🛢️ Sắp đến hạn thay nhớt',
-          sub:`${vName(v.id)} — Còn ${fmtK(remaining)} nữa đến mốc ${fmtK(nextOil)}`,
-          time:`Km hiện tại: ${fmtK(curKm)}`,
-          key:`oil_soon_${v.id}_${nextOil}`,
-          dismissable:true
+          type:'orange', dismissable:true,
+          key:`maint_soon_${v.id}_${item.id}_${nextKm}`,
+          title:`${item.icon} Sắp đến hạn: ${item.name}`,
+          sub:`${vName(v.id)} — Còn ${fmtK(remaining)} nữa đến mốc ${fmtK(nextKm)}`,
+          time:`Km hiện tại: ${fmtK(curKm)}`
         });
       }
-    } else if(v.type === 'Xe máy'){
-      // Xe máy chưa có bản ghi thay nhớt → nhắc nhở
+    });
+
+    // Fallback: xe máy chưa có state nào
+    if(v.type === 'Xe máy' && Object.keys(vState).length === 0){
       alerts.push({
-        type:'blue',
-        title:'🛢️ Chưa ghi lịch thay nhớt',
-        sub:`${vName(v.id)} — Xe máy cần thay nhớt mỗi 2.000 km. Hãy ghi nhận lần đầu.`,
+        type:'blue', dismissable:true,
+        key:`no_schedule_init_${v.id}`,
+        title:`🛢️ Chưa ghi lịch bảo dưỡng`,
+        sub:`${vName(v.id)} — Vào Sửa chữa > Ghi nhận để thiết lập nhắc nhở thay nhớt, dây curoa...`,
         time:'—'
       });
     }
@@ -2281,6 +2430,79 @@ function renderDashFuelPrices() {
       <div class="fp-unit">đ / lít</div>
     </div>`;
   }).join('');
+}
+
+// ============================================================
+//  SCHEDULE PAGE
+// ============================================================
+function renderSchedule(){
+  const el = document.getElementById('schedulePageContent');
+  if(!el) return;
+  if(!vehicles.length){ el.innerHTML='<div class="empty-state"><div class="e-icon">🗓️</div><p>Chưa có xe nào</p></div>'; return; }
+  el.innerHTML = vehicles.map(v => {
+    const curKm  = getCurrentKm(v);
+    const vState = scheduleState[v.id] || {};
+    const items  = MAINT_CATALOG.filter(i => i.vTypes.includes(v.type));
+    if(!items.length) return '';
+    const overdue = items.filter(item => {
+      const st = vState[item.id];
+      return st && st.enabled!==false && st.nextKm && curKm >= n(st.nextKm);
+    }).length;
+    const rows = items.map(item => {
+      const st      = vState[item.id] || {};
+      const enabled = st.enabled !== false;
+      const lastKm  = n(st.lastKm);
+      const nextKm  = n(st.nextKm);
+      const rem     = nextKm ? nextKm - curKm : null;
+      const pct     = (lastKm && nextKm && curKm >= lastKm)
+        ? Math.min(100, Math.max(0, ((curKm-lastKm)/(nextKm-lastKm))*100)) : 0;
+      let badge='', barColor='var(--accent2)';
+      if(!enabled){ badge='<span class="km-badge" style="background:var(--surface3);color:var(--text3)">Tắt</span>'; barColor='var(--surface3)'; }
+      else if(!nextKm){ badge='<span class="km-badge" style="background:var(--surface2);color:var(--text3)">Chưa thiết lập</span>'; barColor='var(--border)'; }
+      else if(rem!==null && curKm>=nextKm){ badge=`<span class="km-badge km-overdue">QUÁ HẠN +${fmtK(curKm-nextKm)}</span>`; barColor='var(--danger)'; }
+      else if(rem!==null && rem<=item.warningKm){ badge=`<span class="km-badge km-soon">Còn ${fmtK(rem)}</span>`; barColor='var(--warn)'; }
+      else if(rem!==null){ badge=`<span class="km-badge km-ok">Còn ${fmtK(rem)}</span>`; barColor='var(--success)'; }
+      return `<tr>
+        <td style="font-size:12.5px;font-weight:600">${item.icon} ${item.name}
+          <span class="ms-type-tag">${item.defaultKm>=1000?(item.defaultKm/1000)+'k':item.defaultKm}km</span>
+        </td>
+        <td style="font-family:var(--mono);font-size:12px;color:var(--text2)">${lastKm?fmtK(lastKm):'—'}</td>
+        <td style="font-family:var(--mono);font-size:12px">${nextKm?fmtK(nextKm):'—'}</td>
+        <td style="min-width:110px">
+          <div style="background:var(--surface3);border-radius:4px;height:5px;overflow:hidden;margin-bottom:4px">
+            <div style="background:${barColor};height:100%;width:${pct}%;border-radius:4px"></div>
+          </div>${badge}
+        </td>
+        <td><button class="btn btn-outline btn-sm" onclick="editScheduleItem('${v.id}','${item.id}')">✏️</button></td>
+      </tr>`;
+    }).join('');
+    return `<div class="card">
+      <div class="card-header">
+        <div class="card-title">${v.plate} · ${v.name}
+          <span style="font-size:10px;background:var(--surface2);padding:1px 7px;border-radius:10px;margin-left:6px;font-weight:400">${v.type}</span>
+          ${overdue?`<span class="km-badge km-overdue" style="margin-left:6px">${overdue} quá hạn</span>`:''}
+        </div>
+        <span style="font-size:12px;color:var(--text2)">Km hiện tại: <b class="km-text">${fmtK(curKm)}</b></span>
+      </div>
+      <table><thead><tr><th>Hạng mục</th><th>Km lần cuối</th><th>Km kế tiếp</th><th>Tiến độ</th><th></th></tr></thead>
+      <tbody>${rows}</tbody></table>
+    </div>`;
+  }).join('');
+}
+
+function editScheduleItem(vId, itemId){
+  const item = MAINT_CATALOG.find(i=>i.id===itemId); if(!item) return;
+  const st   = (scheduleState[vId]||{})[itemId] || {};
+  const lastKm = prompt(`${item.icon} ${item.name}\nKm thay lần cuối:`, st.lastKm||'');
+  if(lastKm===null) return;
+  const defNext = (+lastKm||0) + item.defaultKm;
+  const nextKm  = prompt(`Km thay kế tiếp (chu kỳ ${fmtK(item.defaultKm)}):`, st.nextKm||defNext||'');
+  if(nextKm===null) return;
+  if(!scheduleState[vId]) scheduleState[vId]={};
+  scheduleState[vId][itemId] = {...st, lastKm:+lastKm||'', nextKm:+nextKm||'', enabled:true, updatedAt:today()};
+  saveScheduleState(scheduleState);
+  toast(`Đã cập nhật: ${item.name}`);
+  renderSchedule();
 }
 
 function renderReport(){
